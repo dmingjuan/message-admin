@@ -23,7 +23,7 @@ export default {
 			{content: "告警历史", route: "alarm", cls: 'el-icon-warning'},
 			{content: "发送详情", route: "send", cls: "el-icon-message"},
 			{content: "站点管理", route: "site", cls: "el-icon-menu"},
-			{content: "运维设置", route: "subscriber", cls: "el-icon-setting"},
+			{content: "人员信息", route: "subscriber", cls: "el-icon-information"},
 		]
 		return {
 			navList: navList
