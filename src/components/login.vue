@@ -1,8 +1,9 @@
 <template>
 <div id="_login">
+  <div id="_loginTitle">溢水报警管理系统</div>
 	<el-row>
-		<el-col :span="8" :offset="6">
-			<el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px">
+		<el-col :span="8" :offset="7" id="_login-el-col">
+			<el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" id="_elForm">
 			  <el-form-item label="用户" prop="username">
 			    <el-input v-model="ruleForm.username"></el-input>
 			  </el-form-item>
@@ -145,8 +146,25 @@ export default {
 </script>
 <style type="text/css">
 #_login {
-	height: 400px;
-	margin-top: 100px;
+	padding: 200px 100px;
+  margin: 0px;
+  height: 260px;
 	/*background: url("../assets/index-bg.jpg")*/
+  background: linear-gradient(to bottom, #99A9BF, white);
+}
+#_loginTitle{
+  font-family: Georgia, serif;
+  /*font-weight:bold;*/
+  font-style:oblique;
+  color:#FFFFFF;
+  font-size:60px; 
+  margin: -150px 50px 70px 90px;
+}
+#_elForm{
+  border:1px #EFF2F7 solid;  
+  border-radius:10px;  
+  width: 400px;
+  background-color: #EFF2F7;
+  padding: 20px 55px 12px 0px;
 }
 </style>
