@@ -1,47 +1,49 @@
 <template>
-<div>
+<div v-loading="loading"	element-loading-text="加载中...">
 	<el-row>
-		<el-col>
-			<tool-bar></tool-bar>
+		<el-col :span="5">
+		<side-bar @selectRegion="handleChangeRegion"></side-bar>
+		</el-col>
+		<el-col :span="19">			
+			<tool-bar :retransmission-group="false" :action-group="true"></tool-bar>
+			<el-row>
+				<el-col>
+					<el-table :data="tableData" style="width: 100%" :height="height">
+			 			<el-table-column sortable	prop="region" label="区域" >
+			 			</el-table-column>
+			 			<el-table-column sortable	prop="siteNumber" label="站点编号" >
+			 			</el-table-column>
+			 			<el-table-column sortable	prop="siteName" label="站点名称" >
+			 			</el-table-column>
+			 			<el-table-column sortable	prop="action" label="报警动作" :formatter="actionFormatter">
+			 			</el-table-column>
+			 			<el-table-column sortable	prop="timestamp" label="日期" :formatter="dateTimeFormatter">
+			 			</el-table-column>
+		    	</el-table>
+				</el-col>
+			</el-row>
+			<div style="position:fixed;bottom:0;">
+				<el-pagination
+					style="width:1%;margin:0 auto"
+		      @size-change="handleSizeChange"
+		      @current-change="handleCurrentChange"
+		      :current-page.sync="currentPage"
+		      :page-sizes="[10, 20, 30, 40]"
+		      :page-size="pageSize"
+		      :total="total"
+		      layout="total, sizes, prev, pager, next, jumper">
+		    </el-pagination>
+			</div>
 		</el-col>
 	</el-row>
-	<el-row v-loading="loading"
-		element-loading-text="加载中...">
-		<el-col>
-			<el-table :data="tableData" style="width: 100%" :height="height">
-	 			<el-table-column sortable	prop="region" label="区域" >
-	 			</el-table-column>
-	 			<el-table-column sortable	prop="siteNumber" label="站点编号" >
-	 			</el-table-column>
-	 			<el-table-column sortable	prop="siteName" label="站点名称" >
-	 			</el-table-column>
-	 			<el-table-column sortable	prop="action" label="报警动作" :formatter="actionFormatter">
-	 			</el-table-column>
-	 			<el-table-column sortable	prop="timestamp" label="日期" :formatter="dateTimeFormatter">
-	 			</el-table-column>
-	 			<el-table-column sortable	prop="retransmission" label="是否已转发" :formatter="transFormatter">
-	 			</el-table-column>
-    	</el-table>
-		</el-col>
-	</el-row>
-	<div style="position:fixed;bottom:0;width:100%;text-align:center">
-		<el-pagination
-      @size-change="handleSizeChange"
-      @current-change="handleCurrentChange"
-      :current-page.sync="currentPage"
-      :page-sizes="[10, 20, 30, 40]"
-      :page-size="pageSize"
-      :total="total"
-      layout="total, sizes, prev, pager, next, jumper">
-    </el-pagination>
-
-	</div>
+	
 </div>
 </template>
 <script type="text/javascript">
 import {mydata, mydata2, mydata3} from "./data.js"
 import toolBar from "./toolBar"
 import {dateFormat} from "@/util/date_format.js"
+import sideBar from "./sideBar"
 export default {
 	data() {
 		// let columns = [
@@ -59,11 +61,13 @@ export default {
 			loading: true,
 			currentPage: 1,
 			pageSize: 10,
-			total: 100
+			total: 100,
+			currentRegion: ""
 		}
 	},
 	components: {
-		toolBar
+		toolBar,
+		sideBar
 	},
 	computed: {
 		height() {
@@ -86,24 +90,33 @@ export default {
 		handleSizeChange(val) {
 			this.loading = true
 			// cursor = Math.floor(this.total/val)	* val		
-			let cursor = this.currentPage * val
-			if(cursor > this.total){
-				cursor = Math.floor(this.total / val) * val
-			}
+			this.currentPage = 1
+			this.pageSize = val
 			this.getData().then(data => {
 				this.renderTable(data)
-				this.pageSize = val
 			})
 		},
 		handleCurrentChange(val) {
 			this.loading = true
 			// cursor 改变成 val* this.pageSize, 重新获取数据
+			this.currentPage = val
 			this.getData().then(data => {
 				this.renderTable(data)
-				this.currentPage = val
 			})
 		},
-		getData() {
+		getData(regionCode) {
+			// let datas = {}
+			// if(regionCode || this.currentRegion){
+			// 	this.currentRegion = regionCode
+			// 	datas.regionCode = regionCode
+			// }
+			// return this.$http.post("/api/sits", datas, {
+			// 	params: {
+			// 		access_token: 1,
+			// 		limit: this.pageSize,
+			// 		cursor: this.pageSize * (this.currentPage - 1)
+			// 	}
+			// })
 			let promise = new Promise((resolve, reject) => {
 				setTimeout(() => {
 					resolve(mydata)
@@ -116,6 +129,21 @@ export default {
 			this.$nextTick(() => {
 				this.loading = false
 			})
+		},
+		handleChangeRegion(region) {
+			this.loading = true
+			this.currentPage = 1
+			if(region === "-1"){
+				console.log("导航到全部")
+				this.getData().then(data => {
+					this.renderTable(data)
+				})
+			}else{
+				console.log("导航到部分", region)
+				this.getData(region.regionCode).then(data => {
+					this.renderTable(data)
+				})
+			}
 		}
 	},
 	created() {

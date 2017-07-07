@@ -94,4 +94,23 @@ let mydata4 = [
 	{"siteName": "站点1", "siteNumber": "001", subscribers: [{"name":"ab", "subscriberId":"id1"},{"name":"ab2", "subscriberId":"id2"}]},
 ]
 
-export {mydata, mydata2, mydata3, mydata4}
+let navs = [
+	{"_id": "123", "name": "东城区", "regionCode": "dongcheng1"},
+	{"_id": "123", "name": "fds区", "regionCode": "dongcheng2"},
+	{"_id": "123", "name": "gg区", "regionCode": "dongcheng3"},
+	{"_id": "123", "name": "dfd区", "regionCode": "dongcheng4"},
+	{"_id": "1e4", "name": "453区", "regionCode": "dongcheng34"},
+	{"_id": "123", "name": "bg城区", "regionCode": "dongcheng43"},
+	{"_id": "123", "name": "bfgd区", "regionCode": "dongcheng32"},
+	{"_id": "123", "name": "adf区", "regionCode": "dongcheng54"},
+	{"_id": "123", "name": "bgf区", "regionCode": "dongcheng75"},
+	{"_id": "123", "name": "vx区", "regionCode": "dongcheng432"},
+	{"_id": "123", "name": "re区", "regionCode": "dongcheng76"},
+	{"_id": "123", "name": "东城区", "regionCode": "dongcheng14"},
+	{"_id": "123", "name": "东城区", "regionCode": "dongcheng17"},
+	{"_id": "123", "name": "东城区", "regionCode": "dongcheng46"},
+	{"_id": "123", "name": "东城区", "regionCode": "dongcheng41"},
+	{"_id": "123", "name": "东城区", "regionCode": "dongcheng62"},
+	{"_id": "123", "name": "东城区", "regionCode": "dongcheng434"},
+]
+export {mydata, mydata2, mydata3, mydata4, navs}
