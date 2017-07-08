@@ -9,18 +9,18 @@
 				</el-col>
 				<el-col :span="4">
 					<el-tooltip  content="新增区域">
-						<el-button size="mini" @click.native="handleAddRegion">
+						<el-button size="mini" @click.native="openAddRegionDialog">
 							<i class="fa fa-plus-circle" aria-hidden="true"></i>增加
 						</el-button>
 					</el-tooltip>
-						<el-dialog title="增加区域" :visible.sync="showAddRegion"
+						<el-dialog title="增加区域" :visible="showAddRegion"
 						  size="tiny" :before-close="beforeClose">
 						  <el-form :model="form" ref="addRegionForm" :rules="rules">
-						    <el-form-item label="区域名称：" >
+						    <el-form-item label="区域名称：" prop="name">
 						      <el-input v-model="form.name" auto-complete="off"></el-input>
 						    </el-form-item>
-						    <el-form-item label="区域编码：">
-						  		<el-input v-model="form.regionCode"></el-input>
+						    <el-form-item label="区域编码：" prop="regionCode">
+						  		<el-input v-model="form.regionCode" auto-complete="off"></el-input>
 						    </el-form-item>
 						  </el-form>
 						  <div slot="footer">
@@ -86,16 +86,22 @@ export default {
 		doAddRegion() {
 			this.$refs.addRegionForm.validate(valid => {
 				if(valid) {
-					// 提交信息	
-					console.log('确认提交add', this.form)	
+					// 提交信息						
 					// 提交成功后回调函数中执行beforclose()
-					this.beforeClose()
+					let self = this
+					setTimeout(() => {
+						self.$message({
+							type: "warning",
+							message: `name: ${self.form.name} code: ${self.form.regionCode}`
+						})
+						self.beforeClose()
+					}, 1000)
 				}else {
 					return false
 				}
 			})
 		},
-		handleAddRegion() {
+		openAddRegionDialog() {
 			this.showAddRegion = true
 		},
 		handleSelectRegion(index, indexPath) {

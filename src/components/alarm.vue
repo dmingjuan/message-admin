@@ -5,7 +5,8 @@
 		<side-bar @selectRegion="handleChangeRegion"></side-bar>
 		</el-col>
 		<el-col :span="19">			
-			<tool-bar :retransmission-group="false" :action-group="true"></tool-bar>
+			<tool-bar :retransmission-group="false" :action-group="true" @query="handleSearch">
+			</tool-bar>
 			<el-row>
 				<el-col>
 					<el-table :data="tableData" style="width: 100%" :height="height">
@@ -44,6 +45,7 @@ import {mydata, mydata2, mydata3} from "./data.js"
 import toolBar from "./toolBar"
 import {dateFormat} from "@/util/date_format.js"
 import sideBar from "./sideBar"
+import is from "is_js"
 export default {
 	data() {
 		// let columns = [
@@ -76,10 +78,6 @@ export default {
 		}
 	},
 	methods: {
-		transFormatter(row, column) {
-			let transList = ["未转发", "已转发"]
-			return transList[row.retransmission]
-		},
 		actionFormatter(row, column) {
 			let actionList = ["复归", "动作"]
 			return actionList[row.action]
@@ -143,6 +141,12 @@ export default {
 				this.getData(region.regionCode).then(data => {
 					this.renderTable(data)
 				})
+			}
+		},
+		handleSearch(queryBean) {
+			if(is.not.empty(queryBean)){
+				console.log(queryBean)
+				// 请求刷新数据
 			}
 		}
 	},
