@@ -1,12 +1,12 @@
 <template>
 <div>
-	<el-menu theme="dark" default-active="0" mode="horizontal" 
+	<el-menu theme="dark" :defaultActive="defaultActive" mode="horizontal" 
 		@select="handleSelect" style="padding: 0 5%">
 		<img src="../assets/logo.png" style="height:45px;float:left;padding-right:1%;padding-top:9px">
 		<li style="float:left;color:#bfcbd9;height:60px;line-height: 58px;margin-right:5%;font-size:88%">
 		溢水报警管理系统</li>
 	  <el-menu-item style="font-weight:bold;font-size:95%" 
-	  	v-for="(val, i) in navList" :index="i+''" :key="val.route">
+	  	v-for="(val, i) in navList" :index="val.route" :key="val.route">
 	  	<i :class="val.cls"></i>{{val.content}}
 	  </el-menu-item>
 	  <li style="float:right;hight:60px;padding-top:25px;margin-right:-35px;">
@@ -29,10 +29,18 @@ export default {
 			navList: navList
 		}
 	},
+	computed: {
+		defaultActive() {
+			let active = this.$router.currentRoute.name
+			if(active) {
+				return active
+			}
+			return ""
+		}
+	},
 	methods: {
-		handleSelect(index, keyPath) {
-			let route = this.navList[index].route
-			this.$router.push({path: `/overview/${route}`})
+		handleSelect(name, keyPath) {
+			this.$router.push({path: `/overview/${name}`})
 		}
 	}
 }

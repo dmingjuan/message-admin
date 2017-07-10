@@ -102,12 +102,12 @@ export default {
 				this.renderTable(data)
 			})
 		},
-		getData(regionCode) {
-			// let datas = {}
-			// if(regionCode || this.currentRegion){
-			// 	this.currentRegion = regionCode
-			// 	datas.regionCode = regionCode
-			// }
+		getData(region) {
+			let datas = {}
+			if(region || this.currentRegion){
+				this.currentRegion = region
+				datas.regionCode = region.regionCode
+			}
 			// return this.$http.post("/api/sits", datas, {
 			// 	params: {
 			// 		access_token: 1,
@@ -138,7 +138,7 @@ export default {
 				})
 			}else{
 				console.log("导航到部分", region)
-				this.getData(region.regionCode).then(data => {
+				this.getData(region).then(data => {
 					this.renderTable(data)
 				})
 			}
