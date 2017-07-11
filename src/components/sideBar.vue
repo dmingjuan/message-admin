@@ -13,21 +13,21 @@
 							<i class="fa fa-plus-circle" aria-hidden="true"></i>增加
 						</el-button>
 					</el-tooltip>
-						<el-dialog title="增加区域" :visible="showAddRegion"
-						  size="tiny" :before-close="beforeClose">
-						  <el-form :model="form" ref="addRegionForm" :rules="rules">
-						    <el-form-item label="区域名称：" prop="name">
-						      <el-input v-model="form.name" auto-complete="off"></el-input>
-						    </el-form-item>
-						    <el-form-item label="区域编码：" prop="regionCode">
-						  		<el-input v-model="form.regionCode" auto-complete="off"></el-input>
-						    </el-form-item>
-						  </el-form>
-						  <div slot="footer">
-						    <el-button @click="beforeClose">取 消</el-button>
-						    <el-button type="primary" @click="doAddRegion">确 定</el-button>
-						  </div>
-						</el-dialog>
+					<el-dialog title="增加区域" :visible="showAddRegion"
+					  size="tiny" :before-close="beforeClose">
+					  <el-form :model="form" ref="addRegionForm" :rules="rules">
+					    <el-form-item label="区域名称：" prop="name">
+					      <el-input v-model="form.name" auto-complete="off"></el-input>
+					    </el-form-item>
+					    <el-form-item label="区域编码：" prop="regionCode">
+					  		<el-input v-model="form.regionCode" auto-complete="off"></el-input>
+					    </el-form-item>
+					  </el-form>
+					  <div slot="footer">
+					    <el-button @click="beforeClose">取 消</el-button>
+					    <el-button type="primary" @click="doAddRegion">确 定</el-button>
+					  </div>
+					</el-dialog>
 				</el-col>
 			</el-row>
 		</el-col>
@@ -50,6 +50,7 @@
 </template>
 <script type="text/javascript">
 import {navs} from "./data.js"
+import is from "is_js"
 export default {
 	data() {
 		return {
@@ -88,6 +89,21 @@ export default {
 				if(valid) {
 					// 提交信息						
 					// 提交成功后回调函数中执行beforclose()
+					/**
+					要求增加时，返回增加的数据
+					this.$http.post("/api/region", this.form).then(response => {
+						if(is.existy(response.data) && !response.data.error){
+							let newRegions = this.regions.unshift(response.data)
+							this.renderSideBar(newRegions)							
+						}else {
+							this.$message({
+								type: "error",
+								message: "增加区域失败"
+							})
+						}
+						this.beforeClose()
+					})
+					*/
 					let self = this
 					setTimeout(() => {
 						self.$message({
@@ -122,7 +138,19 @@ export default {
 					return resolve(navs)
 				}, 1000)
 			})
+			// let promise = this.$http.get("/api/regions", {
+			// 	limit: -1,
+			// 	cursor: 0,
+			// 	verbose: 10
+			// }).then(response => {
+			// 	if(is.existy(response.data)){
+			// 		return Promise.resolve(response.data)
+			// 	}else{
+			// 		return Promise.reject({error: "未请求到区域数据"})
+			// 	}
+			// })
 			return promise
+
 		},
 		renderSideBar(regions) {
 			this.regions = regions
@@ -131,6 +159,11 @@ export default {
 	created() {
 		this.getRegions().then(regions => {
 			this.renderSideBar(regions)
+		}, error => {
+			this.$message({
+				type: "error",
+				message: error.error
+			})
 		})
 	}
 }

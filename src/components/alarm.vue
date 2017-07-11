@@ -5,7 +5,8 @@
 		<side-bar @selectRegion="handleChangeRegion"></side-bar>
 		</el-col>
 		<el-col :span="19">			
-			<tool-bar :retransmission-group="false" :action-group="true" @query="handleSearch">
+			<tool-bar :retransmission-group="false" :action-group="true" 
+				ref="toolBar" @query="handleSearch">
 			</tool-bar>
 			<el-row>
 				<el-col>
@@ -64,7 +65,8 @@ export default {
 			currentPage: 1,
 			pageSize: 10,
 			total: 100,
-			currentRegion: ""
+			currentRegion: "",
+			queryBean: {}
 		}
 	},
 	components: {
@@ -90,7 +92,7 @@ export default {
 			// cursor = Math.floor(this.total/val)	* val		
 			this.currentPage = 1
 			this.pageSize = val
-			this.getData().then(data => {
+			this.getData(this.currentRegion).then(data => {
 				this.renderTable(data)
 			})
 		},
@@ -98,32 +100,38 @@ export default {
 			this.loading = true
 			// cursor 改变成 val* this.pageSize, 重新获取数据
 			this.currentPage = val
-			this.getData().then(data => {
+			this.getData(this.currentRegion).then(data => {
 				this.renderTable(data)
 			})
 		},
 		getData(region) {
-			let datas = {}
-			if(region || this.currentRegion){
-				this.currentRegion = region
+			this.currentRegion = region
+			let params = {
+				access_token: 1,
+				limit: this.pageSize,
+				cursor: this.pageSize * (this.currentPage - 1)
+			}
+			let datas = Object.assign({},this.queryBean, params)
+			if(is.existy(region.regionCode)){
 				datas.regionCode = region.regionCode
 			}
-			// return this.$http.post("/api/sits", datas, {
-			// 	params: {
-			// 		access_token: 1,
-			// 		limit: this.pageSize,
-			// 		cursor: this.pageSize * (this.currentPage - 1)
+			// let promise = this.$http.get("/api/alarm", datas).then(response => {
+			// 	if(is.existy(response.data)){
+			// 		retrun Promise.resolve(response.data)
+			// 	}else {
+			// 		retrun Promise.reject({error: "请求告警信息出错"})
 			// 	}
 			// })
 			let promise = new Promise((resolve, reject) => {
 				setTimeout(() => {
-					resolve(mydata)
+					resolve({result: mydata, total: 40})
 				}, 1000)
 			})
 			return promise
 		},
 		renderTable(data) {
-			this.tableData = data
+			this.tableData = data.result
+			this.total = data.total
 			this.$nextTick(() => {
 				this.loading = false
 			})
@@ -131,9 +139,10 @@ export default {
 		handleChangeRegion(region) {
 			this.loading = true
 			this.currentPage = 1
+			this.clearFilter()
 			if(region === "-1"){
 				console.log("导航到全部")
-				this.getData().then(data => {
+				this.getData("").then(data => {
 					this.renderTable(data)
 				})
 			}else{
@@ -144,15 +153,20 @@ export default {
 			}
 		},
 		handleSearch(queryBean) {
-			if(is.not.empty(queryBean)){
-				console.log(queryBean)
-				// 请求刷新数据
-			}
+			this.loading = true
+			this.queryBean = queryBean
+			this.getData(this.currentRegion).then(data => {
+				this.renderTable(data)
+			})
+		},
+		clearFilter() {
+			this.queryBean = {}
+			this.$refs.toolBar.clearFilter()
 		}
 	},
 	created() {
 		this.loading = true
-		this.getData().then(data => {
+		this.getData("").then(data => {
 			this.renderTable(data)
 		})
 	}

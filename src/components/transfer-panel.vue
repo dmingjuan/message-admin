@@ -2,26 +2,25 @@
   <div class="el-transfer-panel" :class="{custom_height: customQuery}">
     <p class="el-transfer-panel__header">{{ title }}</p>
     
-    <div class="el-transfer-panel__body">
-      <el-input
-        class="el-transfer-panel__filter"
-        v-model="query"
-        size="small"
-        :placeholder="placeholder"
-        :icon="inputIcon"
-        @mouseenter.native="inputHover = true"
-        @mouseleave.native="inputHover = false"
-        @click="clearQuery"
-        v-if="filterable&&(!customQuery)"></el-input>
+    <div class="el-transfer-panel__body">     
         <el-input
         class="el-transfer-panel__filter"
         v-model="search"
         size="small"
         :placeholder="placeholder"
         style="padding-right:5%"
-        v-if="filterable&&customQuery">
+        v-if="customQuery&&filterable&&(!original)">
         <el-button slot="append" icon="search" type="primary" @click="doSearch"></el-button>
         </el-input>
+        <el-input
+        class="el-transfer-panel__filter"
+        v-model="query"
+        size="small"
+        :placeholder="placeholder"
+        @mouseenter.native="inputHover = true"
+        @mouseleave.native="inputHover = false"
+        @click="clearQuery"
+        v-else></el-input>
       <el-checkbox-group
         v-model="checked"
         v-show="!hasNoMatch && data.length > 0"
@@ -112,7 +111,11 @@
         type: Boolean,
         default: false
       },
-      searchFunction: Function
+      searchFunction: Function,
+      original: {
+        type: Boolean,
+        default: true
+      }
 
     },
 
@@ -122,7 +125,7 @@
         allChecked: false,
         query: '',
         inputHover: false,
-        search: ""
+        search: "",
       };
     },
 
@@ -246,6 +249,9 @@
       },
       doSearch() {
         console.log(this.search)
+        if(this.search !== "" && this.searchFunction){
+          this.searchFunction(this.search)
+        }
       }
     }
   };
@@ -253,5 +259,6 @@
 <style type="text/css">
 .custom_height {
   height:400px;
+  width: 250px
 }
 </style>

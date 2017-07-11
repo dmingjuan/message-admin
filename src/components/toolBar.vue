@@ -125,6 +125,13 @@ export default {
         searchBean[t[this.selectedSiteType]] = this.searchContent
       }
       this.$emit("query", searchBean)
+    },
+    clearFilter() {
+      this.searchTime = ""
+      this.selectedAction = ""
+      this.selectedRetrans = ""
+      this.searchContent = ""
+      this.selectedSiteType = ""
     }
   }
 };

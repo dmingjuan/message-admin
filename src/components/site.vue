@@ -1,43 +1,48 @@
 <template>
-<div v-loading="loading"	element-loading-text="加载中...">
+<div v-loading="loading"	element-loading-text="加载中..." id="subscriber">
 	<el-row>
 		<el-col :span="5">
 		<side-bar @selectRegion="handleChangeRegion"></side-bar>
 		</el-col>
 		<el-col :span="19">			
 			<el-row>
-				<el-input style="width:30%;float:right;padding-right:1%" placeholder="请输入内容" 
-					v-model="searchSite" size="mini">		
-		    	<el-button slot="append" icon="search" size="mini">搜索</el-button>
-		    </el-input>
-	    	<el-tooltip  content="新增站点">
-					<el-button size="mini" @click.native="openAddDialog">
-						<i class="fa fa-plus-circle" aria-hidden="true"></i>增加
-					</el-button>
-				</el-tooltip>
-
-				<el-dialog title="增加站点" :visible="showAddDialog"
-				  size="tiny" :before-close="beforeCloseAddDialog">
-				  <el-form :model="form" ref="addSiteForm" :rules="rules">
-				    <el-form-item label="站点名称：" prop="siteName">
-				      <el-input v-model="form.siteName" auto-complete="off"></el-input>
-				    </el-form-item>
-				    <el-form-item label="站点编码：" prop="siteNumber">
-				  		<el-input v-model="form.siteNumber" auto-complete="off"></el-input>
-				    </el-form-item>
-				  </el-form>
-				  <div slot="footer">
-				    <el-button @click="beforeCloseAddDialog">取 消</el-button>
-				    <el-button type="primary" @click="doAddSite">确 定</el-button>
-				  </div>
-				</el-dialog>
+				<el-col :span="8" :offset="15">
+					<el-input placeholder="请输入站点名称" 
+						v-model="queryBean.siteName" size="mini">		
+			    	<el-button slot="append" icon="search" size="mini" @click.native="handleSearch">
+			    		搜索
+			    	</el-button>
+			    </el-input>
+		    </el-col>
+		    <el-col :span="1">
+			    <el-tooltip  content="新增站点">
+						<el-button size="mini" @click.native="openAddDialog">
+							<i class="fa fa-plus-circle" aria-hidden="true"></i>增加
+						</el-button>
+					</el-tooltip>
+					<el-dialog title="增加站点" :visible="showAddDialog"
+					  size="tiny" :before-close="beforeCloseAdd">
+					  <el-form :model="form" ref="addSiteForm" :rules="rules">
+					    <el-form-item label="站点名称：" prop="siteName">
+					      <el-input v-model="form.siteName" auto-complete="off"></el-input>
+					    </el-form-item>
+					    <el-form-item label="站点编号：" prop="siteNumber">
+					  		<el-input v-model="form.siteNumber" auto-complete="off"></el-input>
+					    </el-form-item>
+					  </el-form>
+					  <div slot="footer">
+					    <el-button @click="beforeCloseAdd">取 消</el-button>
+					    <el-button type="primary" @click="doAddSite">确 定</el-button>
+					  </div>
+					</el-dialog>
+				</el-col>
 			</el-row>
 			<el-row>
 				<el-col>
 		    	<el-table :data="tableData" style="width: 100%" :height="tableHeight" border> 			
-			 			<el-table-column sortable	prop="siteNumber" label="站点编号" >
-			 			</el-table-column>
 			 			<el-table-column sortable	prop="siteName" label="站点名称" >
+			 			</el-table-column>
+			 			<el-table-column sortable	prop="siteNumber" label="站点编号" >
 			 			</el-table-column>
 			 			<el-table-column label="操作">
 			 				<template scope="scope">
@@ -46,11 +51,11 @@
 				          @click="handleViewPeople(scope.$index, scope.row)">查看人员</el-button>
 				        <el-button
 				          size="small"
-				          @click="handleEditSite(scope.$index, scope.row)">编辑</el-button>
+				          @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
 				        <el-button
 				          size="small"
 				          type="danger"
-				          @click="handleDeleteSite(scope.$index, scope.row)">删除</el-button>
+				          @click="handleDelete(scope.$index, scope.row)">删除</el-button>
 				      </template>
 			 			</el-table-column>
 		    	</el-table>
@@ -70,20 +75,50 @@
 			</div>
 		</el-col>
 	</el-row>
-	<el-dialog title="编辑站点人员" :visible="showDialog"
-	  size="tiny" :before-close="beforeClose">
-	  <el-transfer v-model="allSubscribers" :data="partSubscribers"></el-transfer>
+	<el-dialog title="编辑站点" :visible="showEditDialog"
+	   :before-close="beforeCloseEdit" :top="editType?'15%':'5%'" 
+	   :class="{editDialogStyle: !editType}" ref="editDialog">
+	  <transfer v-if="editType===0" v-model="partSubscribers" 
+	  	:data="allSubscribers" :customQuery="true" 
+	  	v-loading="transferLoading"
+	  	:search-function="searchFunction"
+	  	:titles="editSubscriberTitles" filterable filterPlaceholder="请输入人员姓名"
+	  	@change="handlePeopleChange" style="margin: 0 auto;width:80%">
+	  	<el-pagination
+	  		:page-size="transferPageSize"
+	  		style="text-align:center"
+	    	slot="left-footer"
+			  small
+			  layout="prev, pager, next"
+			  @current-change="handleTransferCurrentChange"
+			  :total="subscriberTotal">
+			</el-pagination>
+			<!-- <el-button-group slot="left-footer" class="subscriber_btns_group">
+			  <el-button icon="arrow-left" size="mini">上一页</el-button>
+			  <el-button size="mini">下一页<i class="el-icon-arrow-right el-icon--right"></i></el-button>
+			</el-button-group> -->
+	  </transfer>
+	  <el-form :model="form" ref="addSiteForm" :rules="rules" v-if="editType===1">
+	    <el-form-item label="站点名称：" prop="siteName">
+	      <el-input v-model="form.siteName" auto-complete="off"></el-input>
+	    </el-form-item>
+	    <el-form-item label="站点编号：" prop="siteNumber">
+	  		<el-input v-model="form.siteNumber" auto-complete="off"></el-input>
+	    </el-form-item>
+	  </el-form>
+	  <div v-if="editType===2" style="">确认删除此项数据？</div>
 	  <div slot="footer">
-	    <el-button @click="beforeClose">取 消</el-button>
-	    <el-button type="primary" @click="doSubmit">确 定</el-button>
+	    <el-button @click="beforeCloseEdit">取 消</el-button>
+	    <el-button type="primary" @click="doSubmitEdit">确 定</el-button>
 	  </div>
 	</el-dialog>
 </div>
 </template>
 <script type="text/javascript">
-import {sites, allSubscribers, partSubscribers} from "./data.js"
+import {allSubscribers, sites, partSubscribers} from "./data.js"
 import {dateFormat} from "@/util/date_format.js"
 import sideBar from "./sideBar"
+import transfer from "./transfer"
 import is from "is_js"
 export default {
 	data() {
@@ -95,6 +130,17 @@ export default {
 		// 	{"name": "timestamp", "content": "日期"},
 		// 	{"name": "retransmission", "content": "已转发"}
 		// ]
+		let validatesiteNumber = (rule, value, callback) => {
+			if(value){
+				if(!(/^1[34578]\d{9}$/.test(value))){ 
+	        callback("请输入正确站点编号号")
+	    	}else{
+	    		callback()
+	    	}
+    	}else{
+    		callback("此项不可为空")
+    	}
+		}
 		return {
 			// columns: columns,
 			tableData: [],
@@ -103,24 +149,38 @@ export default {
 			currentPage: 1,
 			pageSize: 10,
 			total: 100,
+			subscriberTotal: 160,
 			currentRegion: "",
-			searchSite: "",
-			showDialog: false,
+			queryBean: {
+				siteName: ""
+			},
+			showEditDialog: false,
+			showAddDialog: false,
 			allSubscribers: [],
 			partSubscribers: [],
-			showAddDialog: false,
 			form: {
 				siteName: "",
 				siteNumber: ""
 			},
 			rules: {
-				siteName: [{required:true, message:"此项不可为空"}],
-				siteNumber: [{required:true, message:"此项不可为空"}]
-			}
+				siteName: [{required: true, message: "此项不可为空", trigger: 'blur'}],
+				siteNumber: [{required: true, message: "此项不可为空", trigger: 'blur'}]
+			},
+			changedPeople: {
+				added: [],		// 新增的sites
+				removed: []		// 移除掉的sites
+			},
+			editSubscriberTitles: ["全部站点", "已订阅站点"],
+			transferPageSize: 30,
+			editType: 0,
+			transferLoading: false,
+			currentSite: ""
+			
 		}
 	},
 	components: {
-		sideBar
+		sideBar,
+		transfer
 	},
 	computed: {
 		height() {
@@ -132,48 +192,218 @@ export default {
 		}
 	},
 	methods: {
-		doAddSite() {
-			
-		},
-		openAddDialog() {
-
-		},
-		doSubmit() {
-
-		},
-		beforeCloseAddDialog() {},
-		beforeClose() {
-			console.log("要关闭subscribers了", this.form)
-			this.$refs.addRegionForm.resetFields();
-			this.showAddRegion = false
-		},
-		handleViewPeople(index, row) {
-			console.log(index, row, "index, row")
-			let userIds = row.subscribers
-			console.log(this.currentRegion, "currentRegion=")
+		handleTransferCurrentChange(val) {
+			this.transferLoading = true
+			// pageSize固定为30
+			/*
+			let cursor = (val - 1) * this.transferPageSize
+			let params = {
+				limit: this.transferPageSize,
+				cursor: cursor
+			}
 			if(this.currentRegion) {
 				// 非全部
 				let regionId = this.currentRegion._id
-				// 当前区域下所有的user
-				// userIds 与当前subscribers 的差异值
-				this.allSubscribers = allSubscribers
-				this.partSubscribers = partSubscribers
-			}else {
+				params.regionId = regionId
+			}
 				// 全部区域
+				let p1 = this.$http.get("/api/subscriber", params)
+				let p2 = this.$http.get("/api/sitSubscriberMap", {
+					siteId: this.currentSite._id
+				})
+				Promise.all([p1, p2]).then(responseList => {
+					if(is.existy(responseList[0].data.result) && is.existy(responseList[0].data.result)){
+						let allSubscribers = response[0].data.result
+						allSubscribers.forEach(s => {
+							s.key = s._id;
+							s.label = s.name
+						})
+						let partSubscribers = response[1].data.result
+						partSubscribers.forEach(s => {
+							this.partSubscribers.push(s._id)
+						}) 
+						this.allSubscribers = allSubscribers
+					}else{
+						this.$message({
+							type: "error",
+							message: "请求订阅者名单出错！"
+						})
+					}
+					this.transferLoading = false
+				})
+				*/
+				allSubscribers.forEach(site => {
+					site.key = site._id;
+					site.label = site.siteName
+				})
 				this.allSubscribers = allSubscribers
-				this.partSubscribers = partSubscribers
+				this.partSubscribers = ["4"]
+
+
+			let self = this
+			setTimeout(() => {
+				self.transferLoading = false
+			},1000)
+		},
+		searchFunction(content) {
+			// 搜索  名字匹配content， 带上regionId的参数
+		},
+		handlePeopleChange(value, direction, movedKeys) {
+			if(direction === "right") {
+				// 增加site
+				movedKeys.forEach(key => {
+					if(is.inArray(key, this.changedPeople.removed)){
+						this.changedPeople.removed.splice(this.changedPeople.removed.indexOf(key), 1)
+					}else{
+						this.changedPeople.added.push(key)
+					}
+				})			
+			}else {
+				// 移除site
+				movedKeys.forEach(key => {
+					if(is.inArray(key, this.changedPeople.added)){
+						this.changedPeople.added.splice(this.changedPeople.added.indexOf(key), 1)
+					}else{
+						this.changedPeople.removed.push(key)
+					}
+				})
 			}
 		},
-		handleEditSite(index, row) {},
-		handleDeleteSite(index, row) {
+		openEditDialog() {
+			this.showEditDialog = true
+		},
+		openAddDialog() {
+			this.showAddDialog = true
+		},
+		doAddSite() {
+			this.$refs.addSiteForm.validate(valid => {
+				if(valid) {
+					// 提交信息						
+					// 提交成功后回调函数中执行beforclose()
+					/**
+					const {siteName, siteNumber} = this.form
+					this.$http.post("/api/site", {siteName, siteNumber}).then(response => {
+						if(is.existy(response.data)){
+							this.loading = true
+							this.getData(this.currentRegion).then(data => {
+								this.renderTable(data)
+							})
+						}else{
+							this.$message({
+								type: "error",
+								message: "增加站点失败！"
+							})
+						}
+						this.beforeCloseAdd()
+					})
+					*/
 
+					let self = this
+					setTimeout(() => {
+						self.$message({
+							type: "warning",
+							message: `name: ${self.form.name} code: ${self.form.siteNumber}`
+						})
+						self.beforeCloseAdd()
+					}, 1000)
+				}else {
+					return false
+				}
+			})
+		},
+		beforeCloseEdit() {
+			this.showEditDialog = false
+			if(this.editType === 0) {
+				this.allSubscribers = []
+				this.partSubscribers = []
+				this.changedPeople = {
+					added: [],	
+					removed: []	
+				}
+			}else if(this.editType === 1) {
+				console.log(this.form)
+				this.$refs.addSiteForm.resetFields();
+				this.form = {siteName: "", "siteNumber": ""}
+			}else if(this.editType === 2) {
+
+			}
+		},
+		doSubmitEdit() {
+			console.log(this.changedPeople, "changedPeople")
+			// 先提交数据。回调函数中执行关闭
+			if(this.editType === 2){
+				let self = this
+				setTimeout(() => {
+					// self.$message({
+					// 	type: "warning",
+					// 	message: `name: ${self.form.siteName} code: ${self.form.siteNumber}`
+					// })
+					self.beforeCloseEdit()
+				}, 1000)
+			}else if(this.editType === 1){
+				this.$refs.addSiteForm.validate(valid => {
+					if(valid) {
+						// 提交信息						
+						// 提交成功后回调函数中执行beforclose()
+						let self = this
+						setTimeout(() => {
+							self.$message({
+								type: "warning",
+								message: `name: ${self.form.siteName} code: ${self.form.siteNumber}`
+							})
+							self.beforeCloseEdit()
+						}, 1000)
+					}else {
+						return false
+					}
+				})
+			}else if(this.editType == 0){
+				let self = this
+				setTimeout(() => {
+					self.$message({
+						type: "warning",
+						message: `name: ${self.form.siteName} code: ${self.form.siteNumber}`
+					})
+					self.beforeCloseEdit()
+				}, 1000)
+			}
+			// this.beforeCloseEdit()
+		},
+		beforeCloseAdd() {
+			console.log("要关闭subscribers了", this.form)
+			this.$refs.addSiteForm.resetFields();
+			this.showAddDialog = false
+		},
+		handleViewPeople(index, row) {
+			this.editType = 0
+			let userId = row._id
+			this.currentSite = row
+			this.$refs.editDialog.$refs.dialog.style.height = '555px'
+			this.$refs.editDialog.$refs.dialog.style.width = '750px'
+			this.handleTransferCurrentChange(1)
+			this.openEditDialog()			
+		},
+		handleEdit(index, row) {
+			this.editType = 1
+			this.form = Object.assign({}, {siteName: row.siteName, siteNumber: row.siteNumber, "_id": row._id})
+			// this.form = row
+			this.$refs.editDialog.$refs.dialog.style.height = '400px'
+			this.$refs.editDialog.$refs.dialog.style.width = '300px'
+			this.openEditDialog()
+		},
+		handleDelete(index, row) {
+			this.editType = 2
+			// this.form = Object.assign({}, {name: row.name, siteNumber: row.siteNumber})
+			this.$refs.editDialog.$refs.dialog.style.height = '180px'
+			this.$refs.editDialog.$refs.dialog.style.width = '300px'
+			this.openEditDialog()
 		},
 		handleSizeChange(val) {
 			this.loading = true
 			// cursor = Math.floor(this.total/val)	* val		
 			this.currentPage = 1
 			this.pageSize = val
-			this.getData().then(data => {
+			this.getData(this.currentRegion).then(data => {
 				this.renderTable(data)
 			})
 		},
@@ -181,32 +411,39 @@ export default {
 			this.loading = true
 			// cursor 改变成 val* this.pageSize, 重新获取数据
 			this.currentPage = val
-			this.getData().then(data => {
+			this.getData(this.currentRegion).then(data => {
 				this.renderTable(data)
 			})
 		},
 		getData(region) {
-			let datas = {}
-			if(region || this.currentRegion){
-				this.currentRegion = region
+			this.currentRegion = region
+			let params = {
+				access_token: 1,
+				limit: this.pageSize,
+				cursor: this.pageSize * (this.currentPage - 1)
+			}
+			let datas = Object.assign({},this.queryBean, params)
+			if(is.existy(region.regionCode)){
 				datas.regionCode = region.regionCode
 			}
-			// return this.$http.post("/api/sits", datas, {
-			// 	params: {
-			// 		access_token: 1,
-			// 		limit: this.pageSize,
-			// 		cursor: this.pageSize * (this.currentPage - 1)
+			// let promise = this.$http.get("/api/site", datas).then(response => {
+			// 	if(is.existy(response.data)){
+			// 		retrun Promise.resolve(response.data)
+			// 	}else {
+			// 		retrun Promise.reject({error: "请求告警信息出错"})
 			// 	}
 			// })
 			let promise = new Promise((resolve, reject) => {
 				setTimeout(() => {
-					resolve(sites)
+					resolve({result: sites, total: 31})
 				}, 1000)
 			})
 			return promise
 		},
 		renderTable(data) {
-			this.tableData = data
+			console.log(data, 'data==')
+			this.tableData = data.result
+			this.total = data.total
 			this.$nextTick(() => {
 				this.loading = false
 			})
@@ -214,9 +451,10 @@ export default {
 		handleChangeRegion(region) {
 			this.loading = true
 			this.currentPage = 1
+			this.clearFilter()
 			if(region === "-1"){
 				console.log("导航到全部")
-				this.getData().then(data => {
+				this.getData("").then(data => {
 					this.renderTable(data)
 				})
 			}else{
@@ -226,18 +464,30 @@ export default {
 				})
 			}
 		},
-		handleSearch(queryBean) {
-			if(is.not.empty(queryBean)){
-				console.log(queryBean)
-				// 请求刷新数据
-			}
+		handleSearch() {
+			this.loading = true
+			this.getData(this.currentRegion).then(data => {
+				this.renderTable(data)
+			})
+		},
+		clearFilter() {
+			this.queryBean = {siteName: ""}
 		}
 	},
 	created() {
 		this.loading = true
-		this.getData().then(data => {
+		this.getData("").then(data => {
 			this.renderTable(data)
 		})
 	}
 }
 </script>
+<style>
+.subscriber_btns_group {
+	margin-top: -10%;
+	padding-left: 16%;
+}
+.editDialogStyle: {
+	height:900px
+}
+</style>

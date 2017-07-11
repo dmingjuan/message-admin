@@ -35,7 +35,7 @@ export default {
 			if(active) {
 				return active
 			}
-			return ""
+			return "alarm"
 		}
 	},
 	methods: {

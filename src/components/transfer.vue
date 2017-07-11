@@ -2,6 +2,7 @@
   <div class="el-transfer">
     <transfer-panel
       :custom-query="customQuery"
+      :original=false
       :search-function="searchFunction"
       v-bind="$props"
       :data="sourceData"
@@ -30,8 +31,7 @@
       </el-button>
     </div>
     <transfer-panel
-      :custom-query="customQuery"
-      :search-function="searchFunction"
+      :original=true
       v-bind="$props"
       :data="targetData"
       :title="titles[1] || t('el.transfer.titles.1')"
@@ -183,6 +183,6 @@
     }
   };
 </script>
-<!-- 默认采用elment默认的transfer,当采用customQuery=true,且传searchFunction函数
-    时，采用自定义搜索，手动点击搜索，非联动。
+<!-- 默认采用elment默认的transfer,当采用customQuery=true且original=false,
+  且传searchFunction函数时，采用自定义搜索，手动点击搜索，非联动。
  -->

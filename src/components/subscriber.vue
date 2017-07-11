@@ -74,23 +74,35 @@
 		</el-col>
 	</el-row>
 	<el-dialog title="编辑站点" :visible="showEditDialog"
-	   :before-close="beforeCloseEdit" top="5%" style="height:900px" ref="editDialog">
-	  <transfer v-model="partSites" :data="allSites" :customQuery="true" 
-	  	:search-function="searchFunction"
+	   :before-close="beforeCloseEdit" :top="editType?'15%':'5%'" 
+	   :class="{editDialogStyle: !editType}" ref="editDialog">
+	  <transfer v-if="editType===0" v-model="partSites" :data="allSites" :customQuery="true" 
+	  	:search-function="searchFunction" v-loading="transferLoading"
 	  	:titles="editSiteTitles" filterable filterPlaceholder="请输入站点名称"
-	  	@change="handleSiteChange" style="margin: 0 auto;width:75%">
+	  	@change="handleSiteChange" style="margin: 0 auto;width:80%">
 	  	<el-pagination
+	  		:page-size="transferPageSize"
 	  		style="text-align:center"
 	    	slot="left-footer"
 			  small
 			  layout="prev, pager, next"
-			  :total="40">
+			  @current-change="handleTransferCurrentChange"
+			  :total="160">
 			</el-pagination>
 			<!-- <el-button-group slot="left-footer" class="subscriber_btns_group">
 			  <el-button icon="arrow-left" size="mini">上一页</el-button>
 			  <el-button size="mini">下一页<i class="el-icon-arrow-right el-icon--right"></i></el-button>
 			</el-button-group> -->
 	  </transfer>
+	  <el-form :model="form" ref="addPeopleForm" :rules="rules" v-if="editType===1">
+	    <el-form-item label="姓名：" prop="name">
+	      <el-input v-model="form.name" auto-complete="off"></el-input>
+	    </el-form-item>
+	    <el-form-item label="手机：" prop="phone">
+	  		<el-input v-model="form.phone" auto-complete="off"></el-input>
+	    </el-form-item>
+	  </el-form>
+	  <div v-if="editType===2" style="">确认删除此项数据？</div>
 	  <div slot="footer">
 	    <el-button @click="beforeCloseEdit">取 消</el-button>
 	    <el-button type="primary" @click="doSubmitEdit">确 定</el-button>
@@ -153,7 +165,10 @@ export default {
 				added: [],		// 新增的sites
 				removed: []		// 移除掉的sites
 			},
-			editSiteTitles: ["全部站点", "已订阅站点"]
+			editSiteTitles: ["全部站点", "已订阅站点"],
+			transferPageSize: 30,
+			editType: 0,
+			transferLoading: true
 		}
 	},
 	components: {
@@ -170,6 +185,39 @@ export default {
 		}
 	},
 	methods: {
+		handleTransferCurrentChange(val) {
+			this.transferLoading = true
+			// pageSize固定为30
+			let cursor = (val - 1) * this.transferPageSize
+
+
+			if(this.currentRegion) {
+				// 非全部
+				let regionId = this.currentRegion._id
+				// 当前区域下所有的user
+				// userIds 与当前subscribers 的差异值
+				this.allSubscribers = allSubscribers
+				this.partSubscribers = partSubscribers
+			}else {
+				// 全部区域
+				allSites.forEach(site => {
+					site.key = site._id;
+					site.label = site.siteName
+				})
+				// partSites.forEach(site => {
+				// 	site.key = site._id;
+				// 	site.label = site.siteName					
+				// })
+				this.allSites = allSites
+				this.partSites = ["4"]
+			}
+
+
+			let self = this
+			setTimeout(() => {
+				self.transferLoading = false
+			},1000)
+		},
 		searchFunction() {
 
 		},
@@ -194,6 +242,9 @@ export default {
 				})
 			}
 		},
+		openEditDialog() {
+			this.showEditDialog = true
+		},
 		openAddDialog() {
 			this.showAddDialog = true
 		},
@@ -216,10 +267,61 @@ export default {
 			})
 		},
 		beforeCloseEdit() {
+			this.showEditDialog = false
+			if(this.editType === 0) {
+				this.allSites = []
+				this.partSites = []
+				this.changedSites = {
+					added: [],	
+					removed: []	
+				}
+			}else if(this.editType === 1) {
+				console.log(this.form)
+				this.$refs.addPeopleForm.resetFields();
+				this.form = {name: "", "phone": ""}
+			}else if(this.editType === 2) {
 
+			}
 		},
 		doSubmitEdit() {
 			console.log(this.changedSites, "changedSites")
+			// 先提交数据。回调函数中执行关闭
+			if(this.editType === 2){
+				let self = this
+				setTimeout(() => {
+					// self.$message({
+					// 	type: "warning",
+					// 	message: `name: ${self.form.siteName} code: ${self.form.siteNumber}`
+					// })
+					self.beforeCloseEdit()
+				}, 1000)
+			}else if(this.editType === 1){
+				this.$refs.addPeopleForm.validate(valid => {
+					if(valid) {
+						// 提交信息						
+						// 提交成功后回调函数中执行beforclose()
+						let self = this
+						setTimeout(() => {
+							self.$message({
+								type: "warning",
+								message: `name: ${self.form.name} code: ${self.form.phone}`
+							})
+							self.beforeCloseEdit()
+						}, 1000)
+					}else {
+						return false
+					}
+				})
+			}else if(this.editType == 0){
+				let self = this
+				setTimeout(() => {
+					self.$message({
+						type: "warning",
+						message: `name: ${self.form.sname} code: ${self.form.phone}`
+					})
+					self.beforeCloseEdit()
+				}, 1000)
+			}
 		},
 		beforeCloseAdd() {
 			console.log("要关闭subscribers了", this.form)
@@ -227,36 +329,28 @@ export default {
 			this.showAddDialog = false
 		},
 		handleViewSite(index, row) {
+			this.editType = 0
 			let userId = row._id
-			if(this.currentRegion) {
-				// 非全部
-				let regionId = this.currentRegion._id
-				// 当前区域下所有的user
-				// userIds 与当前subscribers 的差异值
-				this.allSubscribers = allSubscribers
-				this.partSubscribers = partSubscribers
-			}else {
-				// 全部区域
-				allSites.forEach(site => {
-					site.key = site._id;
-					site.label = site.siteName
-				})
-				// partSites.forEach(site => {
-				// 	site.key = site._id;
-				// 	site.label = site.siteName
-					
-				// })
-				this.allSites = allSites
-				this.partSites = ["4"]
-			}
-			console.log(this.allSites, this.partSites)
-			console.log(this.$refs.editDialog.$refs.dialog)
-			this.$refs.editDialog.$refs.dialog.style.height = '560px'
-			this.showEditDialog = true
-		},
-		handleEdit(index, row) {},
-		handleDelete(index, row) {
 
+			this.$refs.editDialog.$refs.dialog.style.height = '555px'
+			this.$refs.editDialog.$refs.dialog.style.width = '750px'
+			this.handleTransferCurrentChange(1)
+			this.openEditDialog()			
+		},
+		handleEdit(index, row) {
+			this.editType = 1
+			this.form = Object.assign({}, {name: row.name, phone: row.phone, "_id": row._id})
+			// this.form = row
+			this.$refs.editDialog.$refs.dialog.style.height = '400px'
+			this.$refs.editDialog.$refs.dialog.style.width = '300px'
+			this.openEditDialog()
+		},
+		handleDelete(index, row) {
+			this.editType = 2
+			// this.form = Object.assign({}, {name: row.name, phone: row.phone})
+			this.$refs.editDialog.$refs.dialog.style.height = '180px'
+			this.$refs.editDialog.$refs.dialog.style.width = '300px'
+			this.openEditDialog()
 		},
 		handleSizeChange(val) {
 			this.loading = true
@@ -280,6 +374,9 @@ export default {
 			if(region || this.currentRegion){
 				this.currentRegion = region
 				datas.regionCode = region.regionCode
+			}
+			if(region){
+				this.currentRegion = region
 			}
 			// return this.$http.post("/api/sits", datas, {
 			// 	params: {
@@ -335,5 +432,8 @@ export default {
 .subscriber_btns_group {
 	margin-top: -10%;
 	padding-left: 16%;
+}
+.editDialogStyle: {
+	height:800px
 }
 </style>
