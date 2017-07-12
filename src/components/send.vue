@@ -62,7 +62,7 @@ export default {
 		return {
 			// columns: columns,
 			tableData: [],
-			currentPage: 0,
+			// currentPage: 0,
 			loading: true,
 			currentPage: 1,
 			pageSize: 10,
@@ -117,15 +117,17 @@ export default {
 				limit: this.pageSize,
 				cursor: this.pageSize * (this.currentPage - 1)
 			}
-			let datas = Object.assign({},this.queryBean, params)
+			let datas = Object.assign({
+				access_token: sessionStorage.getItem("accessToken")
+			},this.queryBean, params)
 			if(is.existy(region.regionCode)){
 				datas.regionCode = region.regionCode
 			}
-			// let promise = this.$http.get("/api/send", datas).then(response => {
+			// let promise = this.$http.get("/api/overfall-send", datas).then(response => {
 			// 	if(is.existy(response.data)){
 			// 		retrun Promise.resolve(response.data)
 			// 	}else {
-			// 		retrun Promise.reject({error: "请求告警信息出错"})
+			// 		retrun Promise.reject({error: "请求发送信息列表出错"})
 			// 	}
 			// })
 			let promise = new Promise((resolve, reject) => {
@@ -161,6 +163,7 @@ export default {
 		handleSearch(queryBean) {
 			this.loading = true
 			this.queryBean = queryBean
+			this.currentPage = 1
 			this.getData(this.currentRegion).then(data => {
 				this.renderTable(data)
 			})

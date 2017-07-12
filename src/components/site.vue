@@ -1,5 +1,5 @@
 <template>
-<div v-loading="loading"	element-loading-text="加载中..." id="subscriber">
+<div v-loading="loading"	element-loading-text="加载中..." id="site">
 	<el-row>
 		<el-col :span="5">
 		<side-bar @selectRegion="handleChangeRegion"></side-bar>
@@ -86,6 +86,7 @@
 	  	@change="handlePeopleChange" style="margin: 0 auto;width:80%">
 	  	<el-pagination
 	  		:page-size="transferPageSize"
+	  		:current-page.sync="transferCurrentPage"
 	  		style="text-align:center"
 	    	slot="left-footer"
 			  small
@@ -144,7 +145,7 @@ export default {
 		return {
 			// columns: columns,
 			tableData: [],
-			currentPage: 0,
+			// currentPage: 0,
 			loading: true,
 			currentPage: 1,
 			pageSize: 10,
@@ -167,14 +168,16 @@ export default {
 				siteNumber: [{required: true, message: "此项不可为空", trigger: 'blur'}]
 			},
 			changedPeople: {
-				added: [],		// 新增的sites
-				removed: []		// 移除掉的sites
+				added: [],		// 新增的人员
+				removed: []		// 移除掉的人员
 			},
 			editSubscriberTitles: ["全部站点", "已订阅站点"],
 			transferPageSize: 30,
 			editType: 0,
 			transferLoading: false,
-			currentSite: ""
+			currentSite: "",
+			transferSearch: "",
+			transferCurrentPage: 1,
 			
 		}
 	},
@@ -194,50 +197,57 @@ export default {
 	methods: {
 		handleTransferCurrentChange(val) {
 			this.transferLoading = true
+			this.transferCurrentPage = val
 			// pageSize固定为30
 			/*
 			let cursor = (val - 1) * this.transferPageSize
 			let params = {
 				limit: this.transferPageSize,
-				cursor: cursor
+				cursor: cursor,
+				access_token: sessionStorage.getItem("accessToken")
 			}
 			if(this.currentRegion) {
 				// 非全部
 				let regionId = this.currentRegion._id
 				params.regionId = regionId
 			}
-				// 全部区域
-				let p1 = this.$http.get("/api/subscriber", params)
-				let p2 = this.$http.get("/api/sitSubscriberMap", {
-					siteId: this.currentSite._id
-				})
-				Promise.all([p1, p2]).then(responseList => {
-					if(is.existy(responseList[0].data.result) && is.existy(responseList[0].data.result)){
-						let allSubscribers = response[0].data.result
-						allSubscribers.forEach(s => {
-							s.key = s._id;
-							s.label = s.name
-						})
-						let partSubscribers = response[1].data.result
-						partSubscribers.forEach(s => {
-							this.partSubscribers.push(s._id)
-						}) 
-						this.allSubscribers = allSubscribers
-					}else{
-						this.$message({
-							type: "error",
-							message: "请求订阅者名单出错！"
-						})
-					}
-					this.transferLoading = false
-				})
-				*/
-				allSubscribers.forEach(site => {
-					site.key = site._id;
-					site.label = site.siteName
-				})
-				this.allSubscribers = allSubscribers
-				this.partSubscribers = ["4"]
+			if(this.transferSearch !== ""){
+				params.name = this.transferSearch
+			}
+			// 全部区域
+			let p1 = this.$http.get("/api/overfall-subscriber", params)
+			let p2 = this.$http.get("/api/overfall-siteSubscriberMap", {
+				siteId: this.currentSite._id,
+				access_token: sessionStorage.getItem("accessToken")
+			})
+			Promise.all([p1, p2]).then(responseList => {
+				if(is.existy(responseList[0].data.result) && is.existy(responseList[0].data.result)){
+					let allSubscribers = response[0].data.result
+					allSubscribers.forEach(s => {
+						s.key = s._id;
+						s.label = s.name
+					})
+					let partSubscribers = response[1].data.result
+					partSubscribers.forEach(s => {
+						this.partSubscribers.push(s._id)
+					}) 
+					this.allSubscribers = allSubscribers
+				}else{
+					this.$message({
+						type: "error",
+						message: "请求订阅者名单出错！"
+					})
+				}
+				this.transferLoading = false
+			})
+			*/	
+
+			allSubscribers.forEach(site => {
+				site.key = site._id;
+				site.label = site.siteName
+			})
+			this.allSubscribers = allSubscribers
+			this.partSubscribers = ["1334", "138u34"]
 
 
 			let self = this
@@ -247,10 +257,13 @@ export default {
 		},
 		searchFunction(content) {
 			// 搜索  名字匹配content， 带上regionId的参数
+			this.transferSearch = content
+			this.transferCurrentPage = 1
+			this.handleTransferCurrentChange(1)
 		},
 		handlePeopleChange(value, direction, movedKeys) {
 			if(direction === "right") {
-				// 增加site
+				// 增加人员
 				movedKeys.forEach(key => {
 					if(is.inArray(key, this.changedPeople.removed)){
 						this.changedPeople.removed.splice(this.changedPeople.removed.indexOf(key), 1)
@@ -259,7 +272,7 @@ export default {
 					}
 				})			
 			}else {
-				// 移除site
+				// 移除人员
 				movedKeys.forEach(key => {
 					if(is.inArray(key, this.changedPeople.added)){
 						this.changedPeople.added.splice(this.changedPeople.added.indexOf(key), 1)
@@ -282,7 +295,11 @@ export default {
 					// 提交成功后回调函数中执行beforclose()
 					/**
 					const {siteName, siteNumber} = this.form
-					this.$http.post("/api/site", {siteName, siteNumber}).then(response => {
+					this.$http.post("/api/overfall-site", {siteName, siteNumber}, {
+						params: {
+							access_token: sessionStorage.getItem("accessToken")							
+						}
+					}).then(response => {
 						if(is.existy(response.data)){
 							this.loading = true
 							this.getData(this.currentRegion).then(data => {
@@ -312,6 +329,7 @@ export default {
 			})
 		},
 		beforeCloseEdit() {
+			// 清空缓存
 			this.showEditDialog = false
 			if(this.editType === 0) {
 				this.allSubscribers = []
@@ -320,6 +338,7 @@ export default {
 					added: [],	
 					removed: []	
 				}
+				this.transferSearch = ""
 			}else if(this.editType === 1) {
 				console.log(this.form)
 				this.$refs.addSiteForm.resetFields();
@@ -327,17 +346,32 @@ export default {
 			}else if(this.editType === 2) {
 
 			}
+			this.currentSite = ""
 		},
 		doSubmitEdit() {
-			console.log(this.changedPeople, "changedPeople")
 			// 先提交数据。回调函数中执行关闭
 			if(this.editType === 2){
+				/*
+				this.$http.delete(`/api/overfall-site/${this.currentSite._id}`, {}, {
+					params: {
+						access_token: sessionStorage.getItem("accessToken")
+					}
+				}).then(response => {
+					if(is.not.existy(response.data.error)){
+						this.$message({
+							type: "success",
+							message: "删除站点成功"
+						})
+						this.beforeCloseEdit()
+						this.loading = true
+						this.getData(this.currentRegion).then(data => {
+							this.renderTable(data)
+						})
+					}
+				})
+				*/
 				let self = this
 				setTimeout(() => {
-					// self.$message({
-					// 	type: "warning",
-					// 	message: `name: ${self.form.siteName} code: ${self.form.siteNumber}`
-					// })
 					self.beforeCloseEdit()
 				}, 1000)
 			}else if(this.editType === 1){
@@ -345,6 +379,29 @@ export default {
 					if(valid) {
 						// 提交信息						
 						// 提交成功后回调函数中执行beforclose()
+						/*					
+						this.$http.put(`/api/overfall-site/${this.currentSite._id}`, {
+							siteName: this.form.siteName,
+							siteNumber: this.form.siteNumber
+						}, {
+							params: {
+								access_token: sessionStorage.getItem("accessToken")
+							}
+						}).then(rsp => {
+							if(is.not.existy(rsp.data.error)){
+								this.$message({
+									type: "success",
+									message: "更新站点成功"
+								})
+								this.beforeCloseEdit()
+								// 重新刷新
+								this.loading = true
+								this.getData(this.currentRegion).then(data => {
+									this.renderTable(data)
+								})
+							}
+						})
+						*/
 						let self = this
 						setTimeout(() => {
 							self.$message({
@@ -358,16 +415,64 @@ export default {
 					}
 				})
 			}else if(this.editType == 0){
-				let self = this
-				setTimeout(() => {
-					self.$message({
-						type: "warning",
-						message: `name: ${self.form.siteName} code: ${self.form.siteNumber}`
-					})
-					self.beforeCloseEdit()
-				}, 1000)
+				/*
+				let {added, removed} = this.changedPeople
+				let allPromise = []
+				is.not.empty(added) && added.forEach(userId => {
+					let user = this.allSubscribers.find(sub => sub._id === userId)
+					let datas = {
+						siteId: this.currentSite._id,
+						siteName: this.currentSite.siteName,
+						subscriberId: userId,
+						subscriberName: user? user.name: ""
+					}
+					allPromise.push(this.$http.post("/api/overfall-siteSubscriberMap", datas, {
+						params: {
+							access_token: sessionStorage.getItem("accessToken")							
+						}
+					}))
+				})
+				is.not.empty(removed) && removed.forEach(userId => {
+					let datas = {
+						siteId: this.currentSite._id,
+						subscriberId: userId
+					}
+					allPromise.push(this.$http.delete("/api/overfall-siteSubscriberMap", datas, {
+						params: {
+							access_token: sessionStorage.getItem("accessToken")
+						}
+					}))
+				})
+				let success = true
+				is.not.empty(allPromise) && Promise.all(allPromise).then(responses => {
+					for(let i = 0; i < responses.length; i++){
+						if(is.existy(responses[i].data.error)){
+							success = false
+							this.$message({
+								type: "error",
+								message: "修改站点人员有失败项"
+							})
+							break;
+						}
+					}
+					if(success) {
+						this.$message({
+							type: "success",
+							message: "更新站点人员成功"
+						})
+					}
+				})
+				this.beforeCloseEdit()
+				*/
+				// let self = this
+				// setTimeout(() => {
+				// 	self.$message({
+				// 		type: "warning",
+				// 		message: `name: ${self.form.siteName} code: ${self.form.siteNumber}`
+				// 	})
+				// 	self.beforeCloseEdit()
+				// }, 1000)
 			}
-			// this.beforeCloseEdit()
 		},
 		beforeCloseAdd() {
 			console.log("要关闭subscribers了", this.form)
@@ -376,7 +481,6 @@ export default {
 		},
 		handleViewPeople(index, row) {
 			this.editType = 0
-			let userId = row._id
 			this.currentSite = row
 			this.$refs.editDialog.$refs.dialog.style.height = '555px'
 			this.$refs.editDialog.$refs.dialog.style.width = '750px'
@@ -385,6 +489,7 @@ export default {
 		},
 		handleEdit(index, row) {
 			this.editType = 1
+			this.currentSite = row
 			this.form = Object.assign({}, {siteName: row.siteName, siteNumber: row.siteNumber, "_id": row._id})
 			// this.form = row
 			this.$refs.editDialog.$refs.dialog.style.height = '400px'
@@ -400,6 +505,7 @@ export default {
 		},
 		handleSizeChange(val) {
 			this.loading = true
+			this.currentSite = row
 			// cursor = Math.floor(this.total/val)	* val		
 			this.currentPage = 1
 			this.pageSize = val
@@ -422,15 +528,17 @@ export default {
 				limit: this.pageSize,
 				cursor: this.pageSize * (this.currentPage - 1)
 			}
-			let datas = Object.assign({},this.queryBean, params)
+			let datas = Object.assign({
+				access_token: sessionStorage.getItem("accessToken")
+			},this.queryBean, params)
 			if(is.existy(region.regionCode)){
 				datas.regionCode = region.regionCode
 			}
-			// let promise = this.$http.get("/api/site", datas).then(response => {
+			// let promise = this.$http.get("/api/overfall-site", datas).then(response => {
 			// 	if(is.existy(response.data)){
 			// 		retrun Promise.resolve(response.data)
 			// 	}else {
-			// 		retrun Promise.reject({error: "请求告警信息出错"})
+			// 		retrun Promise.reject({error: "请求站点列表出错"})
 			// 	}
 			// })
 			let promise = new Promise((resolve, reject) => {
@@ -441,7 +549,6 @@ export default {
 			return promise
 		},
 		renderTable(data) {
-			console.log(data, 'data==')
 			this.tableData = data.result
 			this.total = data.total
 			this.$nextTick(() => {
@@ -466,6 +573,7 @@ export default {
 		},
 		handleSearch() {
 			this.loading = true
+			this.currentPage = 1
 			this.getData(this.currentRegion).then(data => {
 				this.renderTable(data)
 			})

@@ -64,7 +64,8 @@ export default {
 				name: [{required: true, message: "名称不可为空", trigger: 'blur,change'}],
 				regionCode: [{required: true, message: "编码不可为空", trigger: 'blur,change'}]
 			},
-			showAddRegion: false
+			showAddRegion: false,
+			regionChecked: true
 		}
 	},
 	computed: {
@@ -89,9 +90,13 @@ export default {
 				if(valid) {
 					// 提交信息						
 					// 提交成功后回调函数中执行beforclose()
-					/**
-					要求增加时，返回增加的数据
-					this.$http.post("/api/region", this.form).then(response => {
+					
+					// 要求增加时，返回增加的数据
+					this.$http.post("/api/overfall-region", this.form, {
+						params: {
+							access_token: sessionStorage.getItem("accessToken")
+						}
+					}).then(response => {
 						if(is.existy(response.data) && !response.data.error){
 							let newRegions = this.regions.unshift(response.data)
 							this.renderSideBar(newRegions)							
@@ -103,7 +108,8 @@ export default {
 						}
 						this.beforeClose()
 					})
-					*/
+
+					/*
 					let self = this
 					setTimeout(() => {
 						self.$message({
@@ -112,6 +118,7 @@ export default {
 						})
 						self.beforeClose()
 					}, 1000)
+					*/
 				}else {
 					return false
 				}
@@ -138,10 +145,11 @@ export default {
 					return resolve(navs)
 				}, 1000)
 			})
-			// let promise = this.$http.get("/api/regions", {
+			// let promise = this.$http.get("/api/overfall-regions", {
 			// 	limit: -1,
 			// 	cursor: 0,
-			// 	verbose: 10
+			// 	verbose: 10,
+			// 	access_token: sessionStorage.getItem("accessToken")
 			// }).then(response => {
 			// 	if(is.existy(response.data)){
 			// 		return Promise.resolve(response.data)
