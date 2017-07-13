@@ -150,7 +150,7 @@ export default {
   margin: 0px;
   height: 260px;
 	/*background: url("../assets/index-bg.jpg")*/
-  background: linear-gradient(to bottom, #99A9BF, white);
+  background: linear-gradient(to bottom, #4a6c71, white);
 }
 #_loginTitle{
   font-family: Georgia, serif;
@@ -165,6 +165,6 @@ export default {
   border-radius:10px;  
   width: 400px;
   background-color: #EFF2F7;
-  padding: 20px 55px 12px 0px;
+  padding: 45px 55px 12px 0px;
 }
 </style>
