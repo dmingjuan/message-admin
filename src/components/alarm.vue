@@ -119,9 +119,9 @@ export default {
 			}
 			// let promise = this.$http.get("/api/overfall-alarm", datas).then(response => {
 			// 	if(is.existy(response.data)){
-			// 		retrun Promise.resolve(response.data)
+			// 		return Promise.resolve(response.data)
 			// 	}else {
-			// 		retrun Promise.reject({error: "请求告警信息出错"})
+			// 		return Promise.reject({error: "请求告警信息出错"})
 			// 	}
 			// })
 			let promise = new Promise((resolve, reject) => {

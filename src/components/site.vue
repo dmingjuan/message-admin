@@ -531,14 +531,14 @@ export default {
 			let datas = Object.assign({
 				access_token: sessionStorage.getItem("accessToken")
 			},this.queryBean, params)
-			if(is.existy(region.regionCode)){
-				datas.regionCode = region.regionCode
+			if(is.existy(region._id)){
+				datas.regionId = region._id
 			}
 			// let promise = this.$http.get("/api/overfall-site", datas).then(response => {
 			// 	if(is.existy(response.data)){
-			// 		retrun Promise.resolve(response.data)
+			// 		return Promise.resolve(response.data)
 			// 	}else {
-			// 		retrun Promise.reject({error: "请求站点列表出错"})
+			// 		return Promise.reject({error: "请求站点列表出错"})
 			// 	}
 			// })
 			let promise = new Promise((resolve, reject) => {

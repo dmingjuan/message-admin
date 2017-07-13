@@ -140,23 +140,23 @@ export default {
 			}
 		},
 		getRegions() {
-			let promise = new Promise((resolve, reject) => {
-				setTimeout(() => {
-					return resolve(navs)
-				}, 1000)
-			})
-			// let promise = this.$http.get("/api/overfall-regions", {
-			// 	limit: -1,
-			// 	cursor: 0,
-			// 	verbose: 10,
-			// 	access_token: sessionStorage.getItem("accessToken")
-			// }).then(response => {
-			// 	if(is.existy(response.data)){
-			// 		return Promise.resolve(response.data)
-			// 	}else{
-			// 		return Promise.reject({error: "未请求到区域数据"})
-			// 	}
+			// let promise = new Promise((resolve, reject) => {
+			// 	setTimeout(() => {
+			// 		return resolve(navs)
+			// 	}, 1000)
 			// })
+			let promise = this.$http.get("/api/overfall-regions", {
+				limit: -1,
+				cursor: 0,
+				verbose: 10,
+				access_token: sessionStorage.getItem("accessToken")
+			}).then(response => {
+				if(is.existy(response.data)){
+					return Promise.resolve(response.data)
+				}else{
+					return Promise.reject({error: "未请求到区域数据"})
+				}
+			})
 			return promise
 
 		},
