@@ -1,0 +1,42 @@
+数据结构
+
+收到告警：
+{
+	_id: ObjectId,
+	region: str,
+	siteNumber: str,
+	action: number 0: 复归，1:动作,
+	timestamp: int32 收到的时间,
+	retransmission: number 0:未转发 1: 已转发
+}
+
+解析出来的告警
+{
+	timestamp: int32,
+	regionCode: str,
+	siteNumber: str,
+	siteName: str,
+	action: 0/1,
+}
+
+
+区域数据结构
+{
+	region: str,
+	regionCode: str,
+	siteIds: [ObjectId, ...]
+}
+
+站点数据结构
+{
+	siteName: str,
+	siteNumber: str,
+	regionId: ObjectId 
+}
+运维人员数据结构
+{
+	name: str,
+	phone: str,
+	siteIds: [ObjectId, ...]
+}
+
